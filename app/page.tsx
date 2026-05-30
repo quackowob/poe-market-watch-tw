@@ -11,7 +11,7 @@ import {
 } from "@/lib/ranking";
 
 export default async function DashboardPage() {
-  const { items, lastUpdated } = await fetchAllMarketData();
+  const { items, lastUpdated, warnings } = await fetchAllMarketData();
 
   const scarabs = getTopVolume(items, "Scarab", 10);
   const favorites = getFavoriteItems(items);
@@ -22,6 +22,15 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {warnings?.length ? (
+        <section className="rounded-lg border border-amber-400/40 bg-amber-950/30 p-4 text-sm text-amber-100">
+          <div className="font-semibold text-white">部分市場資料暫時無法讀取</div>
+          <div className="mt-1 text-amber-100/80">
+            Dashboard 仍會顯示已成功取得的分類；若全部為空，通常是容器暫時連不到 poe.ninja。
+          </div>
+        </section>
+      ) : null}
+
       <section className="grid gap-4 md:grid-cols-4">
         <StatCard label="目標聯盟" value={getLeagueZh()} detail={getLeague()} />
         <StatCard label="最低拾取門檻" value={`${getMinValueChaos()}c`} detail="保險箱掉落監控" />

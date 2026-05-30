@@ -9,18 +9,23 @@ import { normalizeAll } from "./normalize";
 import type { MarketBundle, MarketCategory } from "./types";
 
 const baseUrl = "https://poe.ninja/api/data";
+const requestTimeoutMs = 8000;
 
 type Overview = {
   lines: unknown[];
 };
 
 async function fetchJson<T>(url: string): Promise<T> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
+
   const response = await fetch(url, {
     next: { revalidate: getRefreshIntervalMinutes() * 60 },
+    signal: controller.signal,
     headers: {
       "user-agent": "POE Market Watch"
     }
-  });
+  }).finally(() => clearTimeout(timeout));
 
   if (!response.ok) {
     throw new Error(`poe.ninja request failed: ${response.status} ${response.statusText}`);
@@ -47,16 +52,33 @@ export async function fetchAllMarketData(): Promise<MarketBundle> {
   const ttlMs = getRefreshIntervalMinutes() * 60 * 1000;
 
   return cached(`market:${getLeague()}`, ttlMs, async () => {
-    const currencyEntries = await Promise.all(
-      currencyOverviewCategories.map(async (category) => [category, await fetchCurrencyOverview(category)] as const)
-    );
-    const itemEntries = await Promise.all(
-      itemOverviewCategories.map(async (category) => [category, await fetchItemOverview(category)] as const)
+    const requestedCategories = [...currencyOverviewCategories, ...itemOverviewCategories];
+    const results = await Promise.allSettled(
+      requestedCategories.map(async (category) => {
+        const overview =
+          category === "Currency" || category === "Fragment"
+            ? await fetchCurrencyOverview(category)
+            : await fetchItemOverview(category);
+        return [category, overview] as const;
+      })
     );
 
+    const entries: Array<readonly [MarketCategory, Overview]> = [];
+    const warnings: string[] = [];
+
+    results.forEach((result, index) => {
+      const category = requestedCategories[index];
+      if (result.status === "fulfilled") {
+        entries.push(result.value);
+      } else {
+        warnings.push(`${category} 資料暫時無法讀取：${result.reason instanceof Error ? result.reason.message : "未知錯誤"}`);
+      }
+    });
+
     return {
-      items: normalizeAll(Object.fromEntries([...currencyEntries, ...itemEntries])),
-      lastUpdated: new Date().toISOString()
+      items: normalizeAll(Object.fromEntries(entries)),
+      lastUpdated: new Date().toISOString(),
+      warnings
     };
   });
 }

@@ -30,4 +30,5 @@ export type SortKey = "price" | "change" | "heat" | "valueHeat";
 export type MarketBundle = {
   items: MarketItem[];
   lastUpdated: string;
+  warnings?: string[];
 };

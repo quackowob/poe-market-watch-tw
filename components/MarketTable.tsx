@@ -115,7 +115,7 @@ export function MarketTable({
               onChange={(event) => resetPage(() => setMinOnly(event.target.checked))}
               className="h-4 w-4 accent-amber-400"
             />
-            只看 >=10c
+            只看 &gt;=10c
           </label>
         ) : null}
       </div>

@@ -54,7 +54,7 @@ poe-market-watch/
   next.config.ts
   package.json
   postcss.config.js
-  tailwind.config.ts
+  tailwind.config.js
   tsconfig.json
 ```
 
@@ -104,6 +104,13 @@ docker compose -f docker-compose.prod.yml down
 ```bash
 docker compose down -v
 ```
+
+## 開發注意事項
+
+- 本專案採 Docker-first，本機不需要 Node.js、npm 或 pnpm。
+- `node_modules` 必須留在 Docker volume，不要寫入本機專案資料夾。
+- 每次修改後使用 `git status --short` 檢查工作區，完成一組可驗證修改後建立 commit。
+- 不要提交 `.env`、`.next`、`node_modules` 或臨時工具檔。
 
 ## 後續 TODO
 
