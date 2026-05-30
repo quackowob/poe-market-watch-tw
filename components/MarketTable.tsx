@@ -6,6 +6,7 @@ import { formatChaos, formatHeat, formatPercent } from "@/lib/format";
 import { getHeat, sortMarketItems } from "@/lib/ranking";
 import type { MarketCategory, MarketItem, SortKey } from "@/lib/types";
 import { HeatHint } from "./HeatHint";
+import { useFavoriteNames } from "./preferences";
 
 type Props = {
   items: MarketItem[];
@@ -18,6 +19,8 @@ type Props = {
   categoryTabs?: MarketCategory[];
   minValueToggle?: boolean;
   notes?: Record<string, { zhName?: string; notes?: string[] }>;
+  actions?: React.ReactNode;
+  showFavoriteControls?: boolean;
 };
 
 function matchesFilter(item: MarketItem, filter: string) {
@@ -39,7 +42,9 @@ export function MarketTable({
   filters,
   categoryTabs,
   minValueToggle = false,
-  notes
+  notes,
+  actions,
+  showFavoriteControls = true
 }: Props) {
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>(defaultSort);
@@ -47,6 +52,7 @@ export function MarketTable({
   const [filter, setFilter] = useState(filters?.[0] || "全部");
   const [category, setCategory] = useState<MarketCategory | "全部">("全部");
   const [minOnly, setMinOnly] = useState(false);
+  const { favoriteSet, toggleFavorite } = useFavoriteNames();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -77,14 +83,17 @@ export function MarketTable({
     <section className="rounded-lg border border-line bg-panel/80 p-4 shadow-xl shadow-black/20">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         {title ? <h2 className="text-lg font-semibold text-white">{title}</h2> : <span />}
-        <HeatHint />
+        <div className="flex flex-wrap items-center gap-2">
+          <HeatHint />
+          {actions}
+        </div>
       </div>
 
       <div className="mb-4 flex flex-wrap gap-3">
         {searchable ? (
           <input
             className="focus-ring min-h-10 w-full rounded-md border border-line bg-slate-950 px-3 text-sm text-white placeholder:text-slate-500 sm:w-72"
-            placeholder="搜尋中文或英文"
+            placeholder="搜尋中文或英文名稱"
             value={query}
             onChange={(event) => resetPage(() => setQuery(event.target.value))}
           />
@@ -115,7 +124,7 @@ export function MarketTable({
               onChange={(event) => resetPage(() => setMinOnly(event.target.checked))}
               className="h-4 w-4 accent-amber-400"
             />
-            只看 &gt;=10c
+            只看 ≥10c
           </label>
         ) : null}
       </div>
@@ -155,9 +164,10 @@ export function MarketTable({
       ) : null}
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px] text-left text-sm">
+        <table className="w-full min-w-[780px] text-left text-sm">
           <thead className="border-b border-line text-xs uppercase text-slate-400">
             <tr>
+              {showFavoriteControls ? <th className="py-3 pr-3">最愛</th> : null}
               <th className="py-3 pr-4">名稱</th>
               <th className="py-3 pr-4">分類</th>
               <th className="py-3 pr-4">價格</th>
@@ -167,37 +177,62 @@ export function MarketTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-line/80">
-            {visible.map((item) => (
-              <tr key={item.id} className="align-top">
-                <td className="py-3 pr-4">
-                  <div className="font-medium text-white">{item.displayName}</div>
-                  {item.zhName ? <div className="text-xs text-slate-400">{item.name}</div> : null}
-                </td>
-                <td className="py-3 pr-4 text-slate-300">{getCategoryName(item.category)}</td>
-                <td className="py-3 pr-4 font-semibold text-amber-200">{formatChaos(item)}</td>
-                <td className={`py-3 pr-4 ${Number(item.change24h) >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-                  {formatPercent(item.change24h)}
-                </td>
-                <td className="py-3 pr-4 text-cyan-200">{formatHeat(getHeat(item))}</td>
-                <td className="py-3 pr-4">
-                  <div className="flex max-w-md flex-wrap gap-2">
-                    {item.tags?.map((tag) => (
-                      <span key={tag} className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-200">
-                        {tag}
-                      </span>
-                    ))}
-                    {notes?.[item.name]?.notes?.map((note) => (
-                      <span key={note} className="rounded-full bg-cyan-400/10 px-2 py-1 text-xs text-cyan-200">
-                        {note}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {visible.map((item) => {
+              const isFavorite = favoriteSet.has(item.name);
+              return (
+                <tr key={item.id} className="align-top">
+                  {showFavoriteControls ? (
+                    <td className="py-3 pr-3">
+                      <button
+                        type="button"
+                        className={`focus-ring rounded-md border px-2 py-1 text-base ${
+                          isFavorite
+                            ? "border-amber-300 bg-amber-400/20 text-amber-200"
+                            : "border-line text-slate-500 hover:text-amber-200"
+                        }`}
+                        onClick={() => toggleFavorite(item.name)}
+                        title={isFavorite ? "從我的最愛移除" : "加入我的最愛"}
+                      >
+                        {isFavorite ? "★" : "☆"}
+                      </button>
+                    </td>
+                  ) : null}
+                  <td className="py-3 pr-4">
+                    <div className="font-medium text-white">{item.displayName}</div>
+                    {item.zhName ? <div className="text-xs text-slate-400">{item.name}</div> : null}
+                  </td>
+                  <td className="py-3 pr-4 text-slate-300">{getCategoryName(item.category)}</td>
+                  <td className="py-3 pr-4 font-semibold text-amber-200">{formatChaos(item)}</td>
+                  <td className={`py-3 pr-4 ${Number(item.change24h) >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+                    {formatPercent(item.change24h)}
+                  </td>
+                  <td className="py-3 pr-4 text-cyan-200">{formatHeat(getHeat(item))}</td>
+                  <td className="py-3 pr-4">
+                    <div className="flex max-w-md flex-wrap gap-2">
+                      {item.tags?.map((tag) => (
+                        <span key={tag} className="rounded-full bg-slate-800 px-2 py-1 text-xs text-slate-200">
+                          {tag}
+                        </span>
+                      ))}
+                      {notes?.[item.name]?.notes?.map((note) => (
+                        <span key={note} className="rounded-full bg-cyan-400/10 px-2 py-1 text-xs text-cyan-200">
+                          {note}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
+
+      {visible.length === 0 ? (
+        <div className="mt-4 rounded-md border border-line bg-slate-950/60 p-4 text-sm text-slate-400">
+          目前沒有符合條件的資料。
+        </div>
+      ) : null}
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
         <span>

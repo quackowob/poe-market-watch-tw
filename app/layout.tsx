@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { HeaderNav } from "@/components/HeaderNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,20 +29,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 <span className="text-sm text-slate-400">POE1 3.28 Mirage / 遠古蜃景</span>
               </Link>
               <p className="max-w-xl text-sm text-slate-400">
-                熱度為 poe.ninja 掛單與價格追蹤資料推估，不代表官方實際成交量。
+                追蹤保險箱、譫妄玉、聖甲蟲與高價掉落。熱度是 poe.ninja 市場活動欄位的估算，不代表官方實際成交量。
               </p>
             </div>
-            <nav className="flex gap-2 overflow-x-auto pb-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="focus-ring whitespace-nowrap rounded-md border border-line px-3 py-2 text-sm text-slate-200 transition hover:border-amber-400/60 hover:bg-amber-400/10"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <HeaderNav items={navItems} />
           </div>
         </header>
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
