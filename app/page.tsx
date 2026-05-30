@@ -38,8 +38,8 @@ export default async function DashboardPage() {
         <StatCard label="最後更新" value={formatDateTime(lastUpdated)} detail="台北時間" />
       </section>
 
-      <MarketTable title="今日熱門甲蟲" items={scarabs} defaultSort="heat" pageSize={10} />
       <MarketTable title="我的最愛" items={favorites} defaultSort="heat" pageSize={10} />
+      <MarketTable title="今日熱門甲蟲" items={scarabs} defaultSort="heat" pageSize={10} />
       <MarketTable
         title="譫妄玉市場"
         items={deliriumOrbs}

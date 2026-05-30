@@ -2,7 +2,11 @@ import { getDisplayName, getZhItemName } from "./i18n";
 import type { MarketCategory, MarketItem } from "./types";
 
 type PoeNinjaCurrencyLine = {
+  id?: string;
   currencyTypeName: string;
+  name?: string;
+  primaryValue?: number;
+  volumePrimaryValue?: number;
   chaosEquivalent?: number;
   receive?: { value?: number; count?: number };
   pay?: { value?: number; count?: number };
@@ -11,11 +15,14 @@ type PoeNinjaCurrencyLine = {
   lowConfidencePaySparkLine?: { totalChange?: number };
   receiveSparkLine?: { totalChange?: number };
   paySparkLine?: { totalChange?: number };
+  sparkline?: { totalChange?: number };
 };
 
 type PoeNinjaItemLine = {
-  id?: number;
+  id?: number | string;
   name: string;
+  primaryValue?: number;
+  volumePrimaryValue?: number;
   chaosValue?: number;
   divineValue?: number;
   exaltedValue?: number;
@@ -25,6 +32,18 @@ type PoeNinjaItemLine = {
   detailsId?: string;
   lowConfidenceSparkLine?: { totalChange?: number };
   sparkline?: { totalChange?: number };
+};
+
+type PoeNinjaExchangeItem = {
+  id: string;
+  name: string;
+  image?: string;
+  detailsId?: string;
+};
+
+type PoeNinjaExchangePayload = {
+  lines: Array<PoeNinjaCurrencyLine | PoeNinjaItemLine>;
+  items?: PoeNinjaExchangeItem[];
 };
 
 function stableId(category: MarketCategory, name: string, detailsId?: string) {
@@ -38,48 +57,54 @@ function heatFromCounts(...counts: Array<number | undefined>) {
 
 export function normalizeCurrencyLine(
   line: PoeNinjaCurrencyLine,
-  category: Extract<MarketCategory, "Currency" | "Fragment">
+  category: Extract<MarketCategory, "Currency" | "Fragment">,
+  exchangeItem?: PoeNinjaExchangeItem
 ): MarketItem {
-  const name = line.currencyTypeName;
+  const name = line.currencyTypeName || line.name || exchangeItem?.name || line.id || "Unknown";
   const change24h =
+    line.sparkline?.totalChange ??
     line.receiveSparkLine?.totalChange ??
     line.paySparkLine?.totalChange ??
     line.lowConfidencePaySparkLine?.totalChange;
 
   return {
-    id: stableId(category, name, line.detailsId),
+    id: stableId(category, name, line.detailsId || exchangeItem?.detailsId || line.id),
     name,
     zhName: getZhItemName(name),
     displayName: getDisplayName(name),
     category,
-    chaosValue: line.chaosEquivalent ?? line.receive?.value ?? line.pay?.value ?? 0,
+    chaosValue: line.primaryValue ?? line.chaosEquivalent ?? line.receive?.value ?? line.pay?.value ?? 0,
     change24h,
-    volume: heatFromCounts(line.receive?.count, line.pay?.count),
-    listingCount: heatFromCounts(line.pay?.count, line.receive?.count),
-    icon: line.icon,
-    detailsId: line.detailsId,
+    volume: heatFromCounts(line.volumePrimaryValue, line.receive?.count, line.pay?.count),
+    listingCount: heatFromCounts(line.volumePrimaryValue, line.pay?.count, line.receive?.count),
+    icon: line.icon || exchangeItem?.image,
+    detailsId: line.detailsId || exchangeItem?.detailsId,
     confidence: line.lowConfidencePaySparkLine ? "low" : "high"
   };
 }
 
-export function normalizeItemLine(line: PoeNinjaItemLine, category: MarketCategory): MarketItem {
-  const name = line.name;
+export function normalizeItemLine(line: PoeNinjaItemLine, category: MarketCategory, exchangeItem?: PoeNinjaExchangeItem): MarketItem {
+  const name = line.name || exchangeItem?.name || String(line.id || "Unknown");
 
   return {
-    id: stableId(category, name, line.detailsId || String(line.id || "")),
+    id: stableId(category, name, line.detailsId || exchangeItem?.detailsId || String(line.id || "")),
     name,
     zhName: getZhItemName(name),
     displayName: getDisplayName(name),
     category,
-    chaosValue: line.chaosValue ?? 0,
+    chaosValue: line.primaryValue ?? line.chaosValue ?? 0,
     divineValue: line.divineValue,
     change24h: line.sparkline?.totalChange ?? line.lowConfidenceSparkLine?.totalChange,
-    volume: heatFromCounts(line.count, line.listingCount),
-    listingCount: line.listingCount,
-    icon: line.icon,
-    detailsId: line.detailsId,
+    volume: heatFromCounts(line.volumePrimaryValue, line.count, line.listingCount),
+    listingCount: line.listingCount ?? line.volumePrimaryValue,
+    icon: line.icon || exchangeItem?.image,
+    detailsId: line.detailsId || exchangeItem?.detailsId,
     confidence: line.lowConfidenceSparkLine ? "low" : "high"
   };
+}
+
+function getExchangeItemMap(payload?: PoeNinjaExchangePayload) {
+  return new Map((payload?.items || []).map((item) => [item.id, item]));
 }
 
 export function normalizeAll(
@@ -87,11 +112,25 @@ export function normalizeAll(
 ): MarketItem[] {
   const normalized = Object.entries(payloads).flatMap(([category, payload]) => {
     const typedCategory = category as MarketCategory;
-    const lines = payload?.lines || [];
+    const typedPayload = payload as PoeNinjaExchangePayload | undefined;
+    const lines = typedPayload?.lines || [];
+    const exchangeItems = getExchangeItemMap(typedPayload);
     if (typedCategory === "Currency" || typedCategory === "Fragment") {
-      return lines.map((line) => normalizeCurrencyLine(line as PoeNinjaCurrencyLine, typedCategory));
+      return lines.map((line) =>
+        normalizeCurrencyLine(
+          line as PoeNinjaCurrencyLine,
+          typedCategory,
+          exchangeItems.get(String((line as PoeNinjaCurrencyLine).id || ""))
+        )
+      );
     }
-    return lines.map((line) => normalizeItemLine(line as PoeNinjaItemLine, typedCategory));
+    return lines.map((line) =>
+      normalizeItemLine(
+        line as PoeNinjaItemLine,
+        typedCategory,
+        exchangeItems.get(String((line as PoeNinjaItemLine).id || ""))
+      )
+    );
   });
 
   const divineRate = normalized.find((item) => item.name === "Divine Orb")?.chaosValue;
