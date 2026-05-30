@@ -4,11 +4,14 @@ import { isI18nEnabled } from "./config";
 import type { MarketCategory } from "./types";
 
 const itemMap = itemNameMap as Record<string, string>;
+const caseInsensitiveItemMap = new Map(
+  Object.entries(itemMap).map(([englishName, zhName]) => [englishName.toLowerCase(), zhName])
+);
 const categoryMap = categoryNameMap as Record<MarketCategory, string>;
 
 export function getZhItemName(name: string) {
   if (!isI18nEnabled()) return undefined;
-  return itemMap[name];
+  return itemMap[name] || caseInsensitiveItemMap.get(name.toLowerCase());
 }
 
 export function getCategoryName(category: MarketCategory) {

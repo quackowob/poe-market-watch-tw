@@ -112,6 +112,14 @@ docker compose down -v
 - 每次修改後使用 `git status --short` 檢查工作區，完成一組可驗證修改後建立 commit。
 - 不要提交 `.env`、`.next`、`node_modules` 或臨時工具檔。
 
+## 中文化維護
+
+```bash
+docker compose exec web npm run report:i18n
+```
+
+報表會依估算熱度排序列出尚未收錄在 `config/i18n/item-name-map.json` 的英文物品名，方便逐批參考 PoEDB / 流亡編年史補官方繁中譯名。
+
 ## 後續 TODO
 
 - 擴充 item-name-map.json，補齊更多 PoEDB / 流亡編年史繁中物品名

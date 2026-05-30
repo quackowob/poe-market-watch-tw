@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "build:i18n": "tsx scripts/build-i18n-map.ts"
+    "build:i18n": "tsx scripts/build-i18n-map.ts",
+    "report:i18n": "tsx scripts/report-missing-i18n.ts"
   },
   "dependencies": {
     "next": "^15.3.3",
