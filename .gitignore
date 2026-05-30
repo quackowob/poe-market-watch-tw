@@ -12,3 +12,8 @@ coverage
 *.log
 .vscode
 .idea
+.dotnet-home/
+tools/.dotnet-tools/
+tools/GgpkI18nExtractor/.cache/
+**/bin/
+**/obj/
