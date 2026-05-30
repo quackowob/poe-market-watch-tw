@@ -83,7 +83,9 @@ export function useFavoriteNames() {
         const exists = current.includes(name);
         const next = exists ? current.filter((item) => item !== name) : [...current, name];
         writeStringArray(FAVORITES_KEY, next);
-        window.dispatchEvent(new Event(FAVORITES_CHANGED_EVENT));
+        window.setTimeout(() => {
+          window.dispatchEvent(new Event(FAVORITES_CHANGED_EVENT));
+        }, 0);
         return next;
       });
     },
