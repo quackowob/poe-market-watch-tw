@@ -1,6 +1,6 @@
 import { getRefreshIntervalMinutes, marketCategories } from "../config";
 import { normalizePoedbRow } from "../normalize";
-import { parsePoedbEconomy } from "../parsers/poedbParser";
+import { parsePoedbEconomy, parsePoedbEconomyRows } from "../parsers/poedbParser";
 import type { MarketCategory } from "../types";
 import type { MarketDataProvider } from "./provider";
 
@@ -12,10 +12,12 @@ const categoryUrls: Record<MarketCategory, string> = {
   Fragment: `${poedbBaseUrl}/Economy`,
   Scarab: `${poedbBaseUrl}/Economy`,
   Beast: `${poedbBaseUrl}/Economy`,
-  DeliriumOrb: `${poedbBaseUrl}/Economy`,
-  Omen: `${poedbBaseUrl}/Economy`,
-  DivinationCard: `${poedbBaseUrl}/Economy`
+  DeliriumOrb: `${poedbBaseUrl}/Economy_Delirium`,
+  Omen: `${poedbBaseUrl}/Economy_Omens`,
+  DivinationCard: `${poedbBaseUrl}/Economy_Divination_Cards`
 };
+
+const categorySpecificPages = new Set<MarketCategory>(["DeliriumOrb", "Omen", "DivinationCard"]);
 
 async function fetchHtml(url: string) {
   const controller = new AbortController();
@@ -43,7 +45,10 @@ export class PoedbTwProvider implements MarketDataProvider {
 
   async fetchCategory(category: MarketCategory) {
     const html = await fetchHtml(categoryUrls[category]);
-    return parsePoedbEconomy(html, category).map((row) => normalizePoedbRow(row, category));
+    const rows = categorySpecificPages.has(category)
+      ? parsePoedbEconomyRows(html)
+      : parsePoedbEconomy(html, category);
+    return rows.map((row) => normalizePoedbRow(row, category));
   }
 
   async fetchAll() {
@@ -57,7 +62,10 @@ export class PoedbTwProvider implements MarketDataProvider {
           htmlByUrl.set(url, html);
         }
 
-        return parsePoedbEconomy(html, category).map((row) => normalizePoedbRow(row, category));
+        const rows = categorySpecificPages.has(category)
+          ? parsePoedbEconomyRows(html)
+          : parsePoedbEconomy(html, category);
+        return rows.map((row) => normalizePoedbRow(row, category));
       })
     );
 

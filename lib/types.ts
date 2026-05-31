@@ -27,7 +27,7 @@ export type MarketItem = {
 
 export type SortKey = "price" | "change" | "heat" | "valueHeat";
 
-export type DataRealm = "TW" | "Global";
+export type DataRealm = "TW" | "Global" | "Mixed";
 
 export type MarketDataSource = {
   provider: string;

@@ -15,9 +15,13 @@ export function DataSourceBanner({ source, warnings }: Props) {
       }`}
     >
       <div className="font-semibold text-white">資料來源：{source.label}</div>
-      {source.isFallback ? (
+      {source.realm === "Global" ? (
         <div className="mt-1 text-amber-100/85">
           目前使用 poe.ninja 國際服備援資料，價格可能與台服市場有明顯差異。
+        </div>
+      ) : source.realm === "Mixed" ? (
+        <div className="mt-1 text-amber-100/85">
+          部分分類使用 poe.ninja 國際服備援；同一分類內不混用不同市場資料。
         </div>
       ) : (
         <div className="mt-1 text-cyan-100/80">排行榜以同一個資料來源計算，不混用台服與國際服市場資料。</div>

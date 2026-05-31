@@ -16,9 +16,13 @@ function sourceFor(provider: MarketDataProvider, isFallback: boolean): MarketDat
   };
 }
 
-function getMissingCategories(items: MarketItem[]) {
-  const found = new Set(items.map((item) => item.category));
-  return marketCategories.filter((category) => !found.has(category));
+function mixedSource(): MarketDataSource {
+  return {
+    provider: "PoEDB 台服經濟 + poe.ninja",
+    realm: "Mixed",
+    label: "PoEDB 台服經濟（部分分類使用 poe.ninja 備援）",
+    isFallback: true
+  };
 }
 
 async function loadProvider(provider: MarketDataProvider, isFallback: boolean): Promise<MarketBundle> {
@@ -30,36 +34,61 @@ async function loadProvider(provider: MarketDataProvider, isFallback: boolean): 
   };
 }
 
-function formatMissing(missing: MarketCategory[]) {
-  return missing.join(", ");
-}
-
 export async function fetchMarketDataWithProviders(): Promise<MarketBundle> {
+  const items: MarketItem[] = [];
+  const fallbackCategories: MarketCategory[] = [];
   const warnings: string[] = [];
 
-  try {
-    const bundle = await loadProvider(primaryProvider, false);
-    const missing = getMissingCategories(bundle.items);
+  await Promise.all(
+    marketCategories.map(async (category) => {
+      try {
+        const primaryItems = await primaryProvider.fetchCategory(category);
+        if (primaryItems.length > 0) {
+          items.push(...primaryItems);
+          return;
+        }
+        warnings.push(`PoEDB 台服經濟的 ${category} 分類目前沒有可用資料。`);
+      } catch (error) {
+        warnings.push(
+          `PoEDB 台服經濟的 ${category} 分類讀取失敗：${error instanceof Error ? error.message : "未知錯誤"}。`
+        );
+      }
 
-    if (bundle.items.length > 0 && missing.length === 0) {
-      return bundle;
-    }
+      const fallbackItems = await fallbackProvider.fetchCategory(category);
+      items.push(...fallbackItems);
+      fallbackCategories.push(category);
+    })
+  );
 
-    warnings.push(
-      `PoEDB 台服經濟資料缺少分類：${formatMissing(missing)}。已切換整包資料來源，避免不同市場資料混在同一個排行榜。`
-    );
-  } catch (error) {
-    warnings.push(
-      `PoEDB 台服經濟讀取失敗：${error instanceof Error ? error.message : "未知錯誤"}。已切換整包備援資料來源。`
-    );
+  if (items.length === 0) {
+    return {
+      ...(await loadProvider(fallbackProvider, true)),
+      warnings: [
+        ...warnings,
+        "目前使用 poe.ninja 國際服備援資料，價格可能與台服市場有明顯差異。"
+      ]
+    };
   }
 
-  const fallback = await loadProvider(fallbackProvider, true);
+  if (fallbackCategories.length === 0) {
+    return {
+      items,
+      lastUpdated: new Date().toISOString(),
+      source: sourceFor(primaryProvider, false)
+    };
+  }
+
+  const allFallback = fallbackCategories.length === marketCategories.length;
+
   return {
-    ...fallback,
+    items,
+    lastUpdated: new Date().toISOString(),
+    source: allFallback ? sourceFor(fallbackProvider, true) : mixedSource(),
     warnings: [
       ...warnings,
-      "目前使用 poe.ninja 國際服備援資料，價格可能與台服市場有明顯差異。"
+      allFallback
+        ? "目前使用 poe.ninja 國際服備援資料，價格可能與台服市場有明顯差異。"
+        : `以下分類使用 poe.ninja 國際服備援資料：${fallbackCategories.join(", ")}。同一分類不混用不同市場資料。`
     ]
   };
 }

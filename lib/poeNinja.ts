@@ -8,5 +8,5 @@ export { fetchCurrencyOverview, fetchItemOverview };
 
 export async function fetchAllMarketData(): Promise<MarketBundle> {
   const ttlMs = getRefreshIntervalMinutes() * 60 * 1000;
-  return cached(`market:providers:v1:${getLeague()}`, ttlMs, fetchMarketDataWithProviders);
+  return cached(`market:providers:v2:${getLeague()}`, ttlMs, fetchMarketDataWithProviders);
 }
