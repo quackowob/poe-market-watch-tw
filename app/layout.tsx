@@ -20,7 +20,7 @@ const navItems = [
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh-Hant">
-      <body className="min-h-screen bg-night text-slate-100 antialiased">
+      <body className="min-h-screen bg-night text-slate-100 antialiased" suppressHydrationWarning>
         <header className="sticky top-0 z-40 border-b border-line bg-night/90 backdrop-blur">
           <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 lg:px-8">
             <div className="flex flex-wrap items-end justify-between gap-3">
