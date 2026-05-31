@@ -1,6 +1,6 @@
 import { getRefreshIntervalMinutes, marketCategories } from "../config";
 import { normalizePoedbRow } from "../normalize";
-import { parsePoedbEconomy, parsePoedbEconomyRows } from "../parsers/poedbParser";
+import { getPoedbDivineChaosValue, parsePoedbEconomy, parsePoedbEconomyRows } from "../parsers/poedbParser";
 import type { MarketCategory } from "../types";
 import type { MarketDataProvider } from "./provider";
 
@@ -10,14 +10,14 @@ const requestTimeoutMs = 10000;
 const categoryUrls: Record<MarketCategory, string> = {
   Currency: `${poedbBaseUrl}/Economy`,
   Fragment: `${poedbBaseUrl}/Economy`,
-  Scarab: `${poedbBaseUrl}/Economy`,
+  Scarab: `${poedbBaseUrl}/Economy_Scarabs`,
   Beast: `${poedbBaseUrl}/Economy`,
   DeliriumOrb: `${poedbBaseUrl}/Economy_Delirium`,
   Omen: `${poedbBaseUrl}/Economy_Omens`,
   DivinationCard: `${poedbBaseUrl}/Economy_Divination_Cards`
 };
 
-const categorySpecificPages = new Set<MarketCategory>(["DeliriumOrb", "Omen", "DivinationCard"]);
+const categorySpecificPages = new Set<MarketCategory>(["Scarab", "DeliriumOrb", "Omen", "DivinationCard"]);
 
 async function fetchHtml(url: string) {
   const controller = new AbortController();
@@ -45,26 +45,36 @@ export class PoedbTwProvider implements MarketDataProvider {
 
   async fetchCategory(category: MarketCategory) {
     const html = await fetchHtml(categoryUrls[category]);
+    const divineChaosValue =
+      categorySpecificPages.has(category) ? getPoedbDivineChaosValue(await fetchHtml(categoryUrls.Currency)) : undefined;
     const rows = categorySpecificPages.has(category)
-      ? parsePoedbEconomyRows(html)
-      : parsePoedbEconomy(html, category);
+      ? parsePoedbEconomyRows(html, { divineChaosValue })
+      : parsePoedbEconomy(html, category, { divineChaosValue });
     return rows.map((row) => normalizePoedbRow(row, category));
   }
 
   async fetchAll() {
     const htmlByUrl = new Map<string, string>();
+    const loadHtml = async (url: string) => {
+      let html = htmlByUrl.get(url);
+      if (!html) {
+        html = await fetchHtml(url);
+        htmlByUrl.set(url, html);
+      }
+      return html;
+    };
+
+    const economyHtml = await loadHtml(categoryUrls.Currency);
+    const divineChaosValue = getPoedbDivineChaosValue(economyHtml);
+
     const items = await Promise.all(
       marketCategories.map(async (category) => {
         const url = categoryUrls[category];
-        let html = htmlByUrl.get(url);
-        if (!html) {
-          html = await fetchHtml(url);
-          htmlByUrl.set(url, html);
-        }
+        const html = await loadHtml(url);
 
         const rows = categorySpecificPages.has(category)
-          ? parsePoedbEconomyRows(html)
-          : parsePoedbEconomy(html, category);
+          ? parsePoedbEconomyRows(html, { divineChaosValue })
+          : parsePoedbEconomy(html, category, { divineChaosValue });
         return rows.map((row) => normalizePoedbRow(row, category));
       })
     );

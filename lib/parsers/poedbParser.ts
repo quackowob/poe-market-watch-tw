@@ -97,7 +97,27 @@ function inferCategory(row: ParsedPoedbEconomyRow): MarketCategory {
   return "Currency";
 }
 
-export function parsePoedbEconomyRows(html: string): ParsedPoedbEconomyRow[] {
+type ParsePoedbOptions = {
+  divineChaosValue?: number;
+};
+
+export function getPoedbDivineChaosValue(html: string) {
+  const candidates = [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)]
+    .map((match) => match[1])
+    .map((rowHtml) => ({ rowHtml, cells: getCells(rowHtml) }))
+    .filter(({ cells }) => cells.length >= 4);
+
+  for (const { cells } of candidates) {
+    const item = getEconomyLink(cells[0]);
+    const ratio = parseRatio(cells[1]);
+    if (item?.id !== "divine" || !ratio) continue;
+    return inferChaosValue(ratio);
+  }
+
+  return undefined;
+}
+
+export function parsePoedbEconomyRows(html: string, options: ParsePoedbOptions = {}): ParsedPoedbEconomyRow[] {
   const candidates = [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)]
     .map((match) => match[1])
     .map((rowHtml) => ({ rowHtml, cells: getCells(rowHtml) }))
@@ -111,13 +131,10 @@ export function parsePoedbEconomyRows(html: string): ParsedPoedbEconomyRow[] {
     if (item?.id && ratio) ratiosById.set(item.id, ratio);
   }
 
-  const divineRatio = ratiosById.get("divine");
-  const divineChaosValue =
-    divineRatio && divineRatio.leftId === "chaos"
-      ? divineRatio.leftAmount / divineRatio.rightAmount
-      : divineRatio && divineRatio.rightId === "chaos"
-        ? divineRatio.rightAmount / divineRatio.leftAmount
-        : undefined;
+  const divineChaosValue = options.divineChaosValue ?? inferChaosValue(ratiosById.get("divine") ?? {
+    leftAmount: 0,
+    rightAmount: 0
+  });
 
   return candidates.flatMap(({ cells }) => {
     const item = getEconomyLink(cells[0]);
@@ -143,8 +160,8 @@ export function parsePoedbEconomyRows(html: string): ParsedPoedbEconomyRow[] {
   });
 }
 
-export function parsePoedbEconomy(html: string, category: MarketCategory) {
-  const rows = parsePoedbEconomyRows(html);
+export function parsePoedbEconomy(html: string, category: MarketCategory, options: ParsePoedbOptions = {}) {
+  const rows = parsePoedbEconomyRows(html, options);
   if (category === "Currency") {
     return rows.filter((row) => inferCategory(row) === "Currency");
   }

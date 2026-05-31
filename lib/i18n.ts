@@ -1,9 +1,10 @@
 import categoryNameMap from "@/config/i18n/category-name-map.json";
+import beastNameMap from "@/config/i18n/beast-name-map.json";
 import itemNameMap from "@/config/i18n/item-name-map.json";
 import { isI18nEnabled } from "./config";
 import type { MarketCategory } from "./types";
 
-const itemMap = itemNameMap as Record<string, string>;
+const itemMap = { ...(itemNameMap as Record<string, string>), ...(beastNameMap as Record<string, string>) };
 const caseInsensitiveItemMap = new Map(
   Object.entries(itemMap).map(([englishName, zhName]) => [englishName.toLowerCase(), zhName])
 );

@@ -6,7 +6,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 FROM base AS dev
 
 EXPOSE 3000
-CMD ["sh", "-c", "npm install --no-package-lock && npm run dev -- --hostname 0.0.0.0"]
+CMD ["sh", "-c", "rm -rf /app/.next/* && npm install --no-package-lock && npm run dev -- --hostname 0.0.0.0"]
 
 FROM base AS deps
 

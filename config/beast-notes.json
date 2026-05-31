@@ -7,8 +7,16 @@
     "zhName": "黑色莫里根",
     "notes": ["高價野獸", "常用於野獸工藝"]
   },
-  "The Black Mórrigan": {
-    "zhName": "黑色莫里根",
-    "notes": ["高價野獸", "常用於野獸工藝"]
+  "Craicic Chimeral": {
+    "zhName": "深海奇美拉",
+    "notes": ["常用於拓印魔法物品"]
+  },
+  "Vivid Vulture": {
+    "zhName": "靈現之禿鷹",
+    "notes": ["高價野獸", "常用於影響詞綴工藝"]
+  },
+  "Wild Bristle Matron": {
+    "zhName": "野性刺鬃之母",
+    "notes": ["高價野獸", "常用於前綴/後綴保護工藝"]
   }
 }
