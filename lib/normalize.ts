@@ -1,5 +1,6 @@
-import { getDisplayName, getZhItemName } from "./i18n";
+import { getDisplayName, getZhItemName, getEnglishItemName } from "./i18n";
 import type { MarketCategory, MarketItem } from "./types";
+import type { ParsedPoedbEconomyRow } from "./parsers/poedbParser";
 
 type PoeNinjaCurrencyLine = {
   id?: string;
@@ -32,6 +33,7 @@ type PoeNinjaItemLine = {
   detailsId?: string;
   lowConfidenceSparkLine?: { totalChange?: number };
   sparkline?: { totalChange?: number };
+  sparkLine?: { totalChange?: number };
 };
 
 type PoeNinjaExchangeItem = {
@@ -55,12 +57,17 @@ function heatFromCounts(...counts: Array<number | undefined>) {
   return found;
 }
 
+function fixMojibake(value: string) {
+  if (!/[ÃÂ]/.test(value)) return value;
+  return Buffer.from(value, "latin1").toString("utf8");
+}
+
 export function normalizeCurrencyLine(
   line: PoeNinjaCurrencyLine,
   category: Extract<MarketCategory, "Currency" | "Fragment">,
   exchangeItem?: PoeNinjaExchangeItem
 ): MarketItem {
-  const name = line.currencyTypeName || line.name || exchangeItem?.name || line.id || "Unknown";
+  const name = fixMojibake(line.currencyTypeName || line.name || exchangeItem?.name || line.id || "Unknown");
   const change24h =
     line.sparkline?.totalChange ??
     line.receiveSparkLine?.totalChange ??
@@ -84,7 +91,7 @@ export function normalizeCurrencyLine(
 }
 
 export function normalizeItemLine(line: PoeNinjaItemLine, category: MarketCategory, exchangeItem?: PoeNinjaExchangeItem): MarketItem {
-  const name = line.name || exchangeItem?.name || String(line.id || "Unknown");
+  const name = fixMojibake(line.name || exchangeItem?.name || String(line.id || "Unknown"));
 
   return {
     id: stableId(category, name, line.detailsId || exchangeItem?.detailsId || String(line.id || "")),
@@ -94,12 +101,34 @@ export function normalizeItemLine(line: PoeNinjaItemLine, category: MarketCatego
     category,
     chaosValue: line.primaryValue ?? line.chaosValue ?? 0,
     divineValue: line.divineValue,
-    change24h: line.sparkline?.totalChange ?? line.lowConfidenceSparkLine?.totalChange,
+    change24h: line.sparkline?.totalChange ?? line.sparkLine?.totalChange ?? line.lowConfidenceSparkLine?.totalChange,
     volume: heatFromCounts(line.volumePrimaryValue, line.count, line.listingCount),
     listingCount: line.listingCount ?? line.volumePrimaryValue,
     icon: line.icon || exchangeItem?.image,
     detailsId: line.detailsId || exchangeItem?.detailsId,
     confidence: line.lowConfidenceSparkLine ? "low" : "high"
+  };
+}
+
+export function normalizePoedbRow(row: ParsedPoedbEconomyRow, category: MarketCategory): MarketItem {
+  const englishName = getEnglishItemName(row.name);
+  const name = englishName || row.name;
+  const zhName = englishName ? row.name : getZhItemName(name);
+  const displayName = zhName || getDisplayName(name);
+
+  return {
+    id: stableId(category, name, row.detailsId),
+    name,
+    zhName,
+    displayName,
+    category,
+    chaosValue: row.chaosValue,
+    change24h: row.change24h,
+    volume: row.volume,
+    listingCount: row.volume,
+    icon: row.icon,
+    detailsId: row.detailsId,
+    confidence: "high"
   };
 }
 

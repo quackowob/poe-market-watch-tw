@@ -8,6 +8,9 @@ const caseInsensitiveItemMap = new Map(
   Object.entries(itemMap).map(([englishName, zhName]) => [englishName.toLowerCase(), zhName])
 );
 const categoryMap = categoryNameMap as Record<MarketCategory, string>;
+const zhToEnglishItemMap = new Map(
+  Object.entries(itemMap).map(([englishName, zhName]) => [zhName, englishName])
+);
 
 export function getZhItemName(name: string) {
   if (!isI18nEnabled()) return undefined;
@@ -20,4 +23,8 @@ export function getCategoryName(category: MarketCategory) {
 
 export function getDisplayName(name: string) {
   return getZhItemName(name) || name;
+}
+
+export function getEnglishItemName(zhName: string) {
+  return zhToEnglishItemMap.get(zhName);
 }

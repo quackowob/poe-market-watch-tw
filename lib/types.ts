@@ -27,8 +27,18 @@ export type MarketItem = {
 
 export type SortKey = "price" | "change" | "heat" | "valueHeat";
 
+export type DataRealm = "TW" | "Global";
+
+export type MarketDataSource = {
+  provider: string;
+  realm: DataRealm;
+  label: string;
+  isFallback: boolean;
+};
+
 export type MarketBundle = {
   items: MarketItem[];
   lastUpdated: string;
+  source: MarketDataSource;
   warnings?: string[];
 };
