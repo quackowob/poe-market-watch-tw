@@ -3,14 +3,14 @@ import { DataSourceBanner } from "@/components/DataSourceBanner";
 import { StatCard } from "@/components/StatCard";
 import { getLeague, getLeagueZh, getMinValueChaos, getRefreshIntervalMinutes } from "@/lib/config";
 import { formatDateTime } from "@/lib/format";
-import { fetchAllMarketData } from "@/lib/poeNinja";
+import { readStaticMarketData } from "@/lib/marketData";
 
 export default async function DashboardPage() {
-  const { items, lastUpdated, source, warnings } = await fetchAllMarketData();
+  const { items, lastUpdated, source, warnings, meta } = await readStaticMarketData();
 
   return (
     <div className="space-y-6">
-      <DataSourceBanner source={source} warnings={warnings} />
+      <DataSourceBanner source={source} warnings={warnings} updatedAt={meta.updatedAt} stale={meta.stale} />
 
       <section className="grid gap-4 md:grid-cols-4">
         <StatCard label="目標聯盟" value={getLeagueZh()} detail={getLeague()} />

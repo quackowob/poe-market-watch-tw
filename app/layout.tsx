@@ -36,6 +36,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </div>
         </header>
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <footer className="border-t border-line bg-slate-950/60">
+          <div className="mx-auto max-w-7xl px-4 py-5 text-xs leading-6 text-slate-500 sm:px-6 lg:px-8">
+            <p>
+              POE Market Watch is not an official Grinding Gear Games tool and is not affiliated with Grinding Gear Games.
+              Market data is sourced from PoEDB TW Economy; fallback data may come from poe.ninja. Prices are references
+              only and are not guaranteed trade prices.
+            </p>
+          </div>
+        </footer>
       </body>
     </html>
   );

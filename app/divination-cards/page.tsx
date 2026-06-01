@@ -1,14 +1,14 @@
 import { DataSourceBanner } from "@/components/DataSourceBanner";
 import { MarketTable } from "@/components/MarketTable";
-import { fetchAllMarketData } from "@/lib/poeNinja";
+import { readStaticMarketData } from "@/lib/marketData";
 
 export default async function DivinationCardsPage() {
-  const { items, source, warnings } = await fetchAllMarketData();
+  const { items, source, warnings, meta } = await readStaticMarketData();
   const cards = items.filter((item) => item.category === "DivinationCard");
 
   return (
     <div className="space-y-4">
-      <DataSourceBanner source={source} warnings={warnings} />
+      <DataSourceBanner source={source} warnings={warnings} updatedAt={meta.updatedAt} stale={meta.stale} />
       <MarketTable
         title="命運卡市場"
         items={cards}

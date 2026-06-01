@@ -42,3 +42,11 @@ export type MarketBundle = {
   source: MarketDataSource;
   warnings?: string[];
 };
+
+export type MarketDataMeta = {
+  updatedAt: string;
+  source: MarketDataSource;
+  stale: boolean;
+  errorMessage?: string;
+  itemCount?: number;
+};

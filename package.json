@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "build:pages": "npm run build:market-data && next build",
+    "build:market-data": "tsx scripts/build-market-data.ts",
+    "start": "node scripts/serve-static.mjs",
     "build:i18n": "tsx scripts/build-i18n-map.ts",
     "update:i18n:beasts": "tsx scripts/update-beast-i18n-from-poedb.ts",
     "report:i18n": "tsx scripts/report-missing-i18n.ts"

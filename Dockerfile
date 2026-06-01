@@ -6,7 +6,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 FROM base AS dev
 
 EXPOSE 3000
-CMD ["sh", "-c", "rm -rf /app/.next/* && npm install --no-package-lock && npm run dev -- --hostname 0.0.0.0"]
+CMD ["sh", "-c", "rm -rf /app/.next/* && npm install --no-package-lock && (npm run build:market-data || true) && npm run dev -- --hostname 0.0.0.0"]
 
 FROM base AS deps
 
@@ -17,16 +17,15 @@ FROM base AS builder
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN npm run build:pages
 
 FROM base AS prod
 
 ENV NODE_ENV=production
 
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/out ./out
+COPY --from=builder /app/scripts/serve-static.mjs ./scripts/serve-static.mjs
 
 EXPOSE 3000
 CMD ["npm", "run", "start"]

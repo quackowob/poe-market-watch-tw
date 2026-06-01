@@ -2,10 +2,12 @@ import { getRefreshIntervalMinutes, marketCategories } from "../config";
 import { normalizePoedbRow } from "../normalize";
 import { getPoedbDivineChaosValue, parsePoedbEconomy, parsePoedbEconomyRows } from "../parsers/poedbParser";
 import type { MarketCategory } from "../types";
+import { getCrawlerUserAgent } from "../userAgent";
 import type { MarketDataProvider } from "./provider";
 
 const poedbBaseUrl = "https://poedb.tw/tw";
 const requestTimeoutMs = 10000;
+const maxAttempts = 3;
 
 const categoryUrls: Record<MarketCategory, string> = {
   Currency: `${poedbBaseUrl}/Economy`,
@@ -20,23 +22,37 @@ const categoryUrls: Record<MarketCategory, string> = {
 const categorySpecificPages = new Set<MarketCategory>(["Scarab", "DeliriumOrb", "Omen", "DivinationCard"]);
 
 async function fetchHtml(url: string) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
+  let lastError: unknown;
 
-  const response = await fetch(url, {
-    next: { revalidate: getRefreshIntervalMinutes() * 60 },
-    signal: controller.signal,
-    headers: {
-      "user-agent": "POE Market Watch",
-      accept: "text/html,application/xhtml+xml"
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
+
+    try {
+      const response = await fetch(url, {
+        next: { revalidate: getRefreshIntervalMinutes() * 60 },
+        signal: controller.signal,
+        headers: {
+          "user-agent": getCrawlerUserAgent(),
+          accept: "text/html,application/xhtml+xml"
+        }
+      }).finally(() => clearTimeout(timeout));
+
+      if (!response.ok) {
+        throw new Error(`PoEDB request failed: ${response.status} ${response.statusText}`);
+      }
+
+      return response.text();
+    } catch (error) {
+      clearTimeout(timeout);
+      lastError = error;
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+      }
     }
-  }).finally(() => clearTimeout(timeout));
-
-  if (!response.ok) {
-    throw new Error(`PoEDB request failed: ${response.status} ${response.statusText}`);
   }
 
-  return response.text();
+  throw lastError instanceof Error ? lastError : new Error(`PoEDB request failed: ${url}`);
 }
 
 export class PoedbTwProvider implements MarketDataProvider {

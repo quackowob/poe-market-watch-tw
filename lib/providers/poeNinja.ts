@@ -6,11 +6,13 @@ import {
 } from "../config";
 import { normalizeAll, normalizeCurrencyLine, normalizeItemLine } from "../normalize";
 import type { MarketCategory } from "../types";
+import { getCrawlerUserAgent } from "../userAgent";
 import type { MarketDataProvider } from "./provider";
 
 const exchangeBaseUrl = "https://poe.ninja/poe1/api/economy/exchange/current/overview";
 const stashItemBaseUrl = "https://poe.ninja/poe1/api/economy/stash/current/item/overview";
 const requestTimeoutMs = 8000;
+const maxAttempts = 3;
 
 type Overview = {
   lines: unknown[];
@@ -18,22 +20,36 @@ type Overview = {
 };
 
 async function fetchJson<T>(url: string): Promise<T> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
+  let lastError: unknown;
 
-  const response = await fetch(url, {
-    next: { revalidate: getRefreshIntervalMinutes() * 60 },
-    signal: controller.signal,
-    headers: {
-      "user-agent": "POE Market Watch"
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
+
+    try {
+      const response = await fetch(url, {
+        next: { revalidate: getRefreshIntervalMinutes() * 60 },
+        signal: controller.signal,
+        headers: {
+          "user-agent": getCrawlerUserAgent()
+        }
+      }).finally(() => clearTimeout(timeout));
+
+      if (!response.ok) {
+        throw new Error(`poe.ninja request failed: ${response.status} ${response.statusText}`);
+      }
+
+      return response.json() as Promise<T>;
+    } catch (error) {
+      clearTimeout(timeout);
+      lastError = error;
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+      }
     }
-  }).finally(() => clearTimeout(timeout));
-
-  if (!response.ok) {
-    throw new Error(`poe.ninja request failed: ${response.status} ${response.statusText}`);
   }
 
-  return response.json() as Promise<T>;
+  throw lastError instanceof Error ? lastError : new Error(`poe.ninja request failed: ${url}`);
 }
 
 function buildUrl(category: MarketCategory) {

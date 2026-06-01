@@ -1,138 +1,184 @@
 # POE Market Watch
 
-Path of Exile 1 3.28 Mirage（遠古蜃景）市場監控 Dashboard。專案採 Docker-first 開發流程，本機只需要 Docker / Docker Compose，不需要安裝 Node.js、npm 或 pnpm，也不會把 `node_modules` 寫入本機專案資料夾。
+Static market dashboard for Path of Exile 1, focused on the Taiwan server Mirage league.
 
-## 功能
+- League: `Mirage`
+- Traditional Chinese league name: `遠古蜃景`
+- Main workflows: Strongbox, Bestiary, Delirium Orb, Scarab, Currency, Fragment, Omen, Divination Card monitoring
 
-- Dashboard: 今日熱門甲蟲、我的最愛、譫妄玉市場、高價野獸、高價命運卡、保險箱掉落監控
-- Pages: Scarabs、Delirium Orbs、Beasts、Divination Cards、Fragments & Currency
-- poe.ninja API integration with in-memory TTL cache
-- 繁體中文 i18n map 架構
-- 搜尋支援中文與英文名稱
-- 所有 volume / count / listingCount 都顯示為「熱度」或「估算熱度」，不宣稱為官方成交量
+## Status
 
-## 檔案結構
+The app supports two modes:
 
-```text
-poe-market-watch/
-  app/
-    beasts/page.tsx
-    delirium-orbs/page.tsx
-    divination-cards/page.tsx
-    fragments-currency/page.tsx
-    scarabs/page.tsx
-    error.tsx
-    globals.css
-    layout.tsx
-    loading.tsx
-    page.tsx
-  components/
-    HeatHint.tsx
-    MarketTable.tsx
-    StatCard.tsx
-  config/
-    beast-notes.json
-    favorites.json
-    i18n/category-name-map.json
-    i18n/item-name-map.json
-  lib/
-    cache.ts
-    config.ts
-    format.ts
-    i18n.ts
-    normalize.ts
-    poeNinja.ts
-    ranking.ts
-    types.ts
-  scripts/
-    build-i18n-map.ts
-  .dockerignore
-  .env.example
-  Dockerfile
-  docker-compose.yml
-  docker-compose.prod.yml
-  next.config.ts
-  package.json
-  postcss.config.js
-  tailwind.config.js
-  tsconfig.json
-```
+- Local Docker development with hot reload.
+- Static GitHub Pages deployment with market data generated at build time.
 
-## .env.example
+No local Node.js, npm, or pnpm installation is required for Docker development.
 
-```env
-LEAGUE=Mirage
-LEAGUE_ZH=遠古蜃景
-MIN_VALUE_CHAOS=10
-REFRESH_INTERVAL_MINUTES=30
-ENABLE_I18N=true
-```
+## Screenshots
 
-## 安裝步驟
+Placeholder for public release screenshots:
+
+- Dashboard
+- Scarabs
+- Delirium Orbs
+- Beasts
+- Divination Cards
+
+## Data Sources
+
+- Primary source: PoEDB TW Economy
+- Fallback source: poe.ninja, when a category is unavailable or parsing fails
+
+Prices are references only and are not guaranteed trade prices. Heat values are market activity estimates and must not be treated as official transaction volume.
+
+## Unofficial Disclaimer
+
+POE Market Watch is not an official Grinding Gear Games tool and is not affiliated with Grinding Gear Games.
+
+Path of Exile, GGG, PoEDB, poe.ninja, related names, icons, and data belong to their respective rights holders.
+
+Do not put `POESESSID`, account cookies, tokens, or API keys in a public repository.
+
+## Docker Local Development
+
+Create `.env` from the example:
 
 ```bash
 cp .env.example .env
 ```
 
-Docker 會在容器內安裝依賴。開發環境的 `node_modules` 使用 Docker volume 掛在 `/app/node_modules`，不會落在本機專案資料夾。
-
-## 開發啟動
+Start development:
 
 ```bash
 docker compose up --build
 ```
 
-開啟 http://localhost:3000
+Open:
 
-## 正式啟動
-
-```bash
-docker compose -f docker-compose.prod.yml up --build -d
+```text
+http://localhost:3000
 ```
 
-開啟 http://localhost:3000
-
-## 停止服務
+Stop:
 
 ```bash
 docker compose down
-docker compose -f docker-compose.prod.yml down
 ```
 
-## 清除環境
+Clear Docker volumes:
 
 ```bash
 docker compose down -v
 ```
 
-## 開發注意事項
+Dependencies are installed inside Docker volumes. `node_modules` is not required on the host project folder.
 
-- 本專案採 Docker-first，本機不需要 Node.js、npm 或 pnpm。
-- `node_modules` 必須留在 Docker volume，不要寫入本機專案資料夾。
-- 每次修改後使用 `git status --short` 檢查工作區，完成一組可驗證修改後建立 commit。
-- 不要提交 `.env`、`.next`、`node_modules` 或臨時工具檔。
+## Static Production Preview
 
-## 中文化維護
+Build and serve the static export through Docker:
 
 ```bash
-docker compose exec web npm run report:i18n
+docker compose -f docker-compose.prod.yml up --build -d
 ```
 
-報表會依估算熱度排序列出尚未收錄在 `config/i18n/item-name-map.json` 的英文物品名，方便逐批參考 PoEDB / 流亡編年史補官方繁中譯名。
+Open:
 
-## 後續 TODO
+```text
+http://localhost:3000
+```
 
-- 擴充 item-name-map.json，補齊更多 PoEDB / 流亡編年史繁中物品名
-- 加入價格歷史圖表與本地歷史快照
-- 加入錯誤重試與 poe.ninja API 健康狀態提示
-- 增加測試，特別是 normalize 與 ranking 規則
-- 加入 Vercel 部署設定與環境變數文件
+Stop:
 
-## 未來擴充建議
+```bash
+docker compose -f docker-compose.prod.yml down
+```
 
-- Discord 通知
-- 價格警報
-- 倉庫掃描
-- POESESSID 整合
-- 自動查價
-- 歷史價格圖表
+## Market Data Build
+
+Generate static market data:
+
+```bash
+docker compose exec web npm run build:market-data
+```
+
+Output files:
+
+```text
+public/data/market.json
+public/data/meta.json
+```
+
+`meta.json` includes:
+
+- `updatedAt`
+- `source`
+- `stale`
+- `errorMessage`
+- `itemCount`
+
+If data fetching fails and a previous successful `market.json` exists, the previous data is kept and `meta.json` is marked stale.
+
+Build the full static export:
+
+```bash
+docker compose exec web npm run build:pages
+```
+
+## GitHub Pages Deployment
+
+GitHub Actions workflow:
+
+```text
+.github/workflows/deploy-pages.yml
+```
+
+The workflow:
+
+1. Installs dependencies with `npm ci`.
+2. Runs `npm run build:market-data`.
+3. Runs `npm run build`.
+4. Uploads `out/` to GitHub Pages.
+
+Repository settings required:
+
+1. Enable GitHub Pages.
+2. Set source to GitHub Actions.
+3. Ensure Actions permissions allow Pages deployment.
+
+Scheduled updates run every 30 minutes.
+
+## Static Export Notes
+
+GitHub Pages does not provide a server runtime. The frontend reads static data generated during build:
+
+```text
+/data/market.json
+/data/meta.json
+```
+
+Do not make high-volume direct PoEDB requests from the browser. Do not use GitHub Pages as a high-frequency API server.
+
+## Known Limitations
+
+- PoEDB has no stable public API for every category, so some data is parsed from HTML.
+- Some categories may use poe.ninja fallback data.
+- Taiwan server prices and global server fallback prices can differ significantly.
+- Static data may be stale between scheduled builds.
+- Historical price storage is not implemented.
+
+## Roadmap
+
+- Public release screenshots
+- GitHub Pages static data caching polish
+- Discord notifications
+- Price alerts
+- Stash scanning
+- POESESSID-supported private local integrations
+- Historical price charts through an external database or GitHub Releases
+
+## License
+
+Project code is licensed under MIT. See `LICENSE`.
+
+PoE, PoEDB, poe.ninja, GGG names, icons, and data rights belong to their respective rights holders. If PoEDB wiki content is quoted or reused, follow PoEDB's content license terms.

@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { getCrawlerUserAgent } from "../lib/userAgent";
 
 const sourceUrl = "https://poedb.tw/tw/Beast#Beast%E6%80%AA%E7%89%A9";
 const poeNinjaBeastUrl = `https://poe.ninja/poe1/api/economy/stash/current/item/overview?league=${encodeURIComponent(
@@ -45,7 +46,7 @@ async function readExistingMap() {
 async function fetchText(url: string) {
   const response = await fetch(url, {
     headers: {
-      "user-agent": "POE Market Watch i18n updater"
+      "user-agent": getCrawlerUserAgent()
     }
   });
 
@@ -59,7 +60,7 @@ async function fetchText(url: string) {
 async function fetchCurrentBeastNames() {
   const response = await fetch(poeNinjaBeastUrl, {
     headers: {
-      "user-agent": "POE Market Watch i18n updater"
+      "user-agent": getCrawlerUserAgent()
     }
   });
 
