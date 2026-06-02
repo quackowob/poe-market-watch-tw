@@ -1,73 +1,137 @@
 # POE Market Watch
 
-Path of Exile 1 market dashboard for the Taiwan server `Mirage` league (`遠古蜃景`).
+A market monitoring dashboard for **Path of Exile 1 Taiwan Realm** (`Mirage` League / `遠古蜃景`).
 
-Languages:
+English | [繁體中文](README.zh-TW.md)
 
-- English: `README.md`
-- 繁體中文：`README.zh-TW.md`
+POE Market Watch is designed for players who primarily farm:
 
-The project is currently optimized for two workflows:
+* Strongboxes
+* Bestiary
+* Delirium
 
-- Local Docker-first development with hot reload.
-- Static GitHub Pages deployment with build-time market data generation.
+The goal is to quickly identify:
 
-No local Node.js, npm, or pnpm installation is required for Docker development.
+* High-value drops
+* Trending items
+* Active market categories
+* Valuable Strongbox loot
+* Items worth keeping or selling
 
 ## Features
 
-- Dashboard for strongbox-related drops and high-value items.
-- Pages for Scarabs, Delirium Orbs, Beasts, Divination Cards, Currency, and Fragments.
-- Traditional Chinese item display with English names preserved for search.
-- Favorite items and customizable dashboard/navigation order.
-- Static market snapshot served from `public/data/market.json`.
-- Data freshness metadata served from `public/data/meta.json`.
-- Stale-data warning when the snapshot is older than 2 hours.
+* Dashboard focused on Strongbox-related loot and high-value items.
+* Dedicated pages for:
+
+  * Scarabs
+  * Delirium Orbs
+  * Beasts
+  * Divination Cards
+  * Currency
+  * Fragments
+* Traditional Chinese item names displayed by default.
+* English names preserved for search and filtering.
+* Favorites / watchlist support.
+* Market data snapshots exported to:
+
+  * `public/data/market.json`
+  * `public/data/meta.json`
+* Data staleness warning when data is older than 2 hours.
 
 ## Screenshots
 
-Placeholder for public release screenshots:
+Screenshot placeholders:
 
-- Dashboard
-- Scarabs
-- Delirium Orbs
-- Beasts
-- Divination Cards
+* Dashboard
+* Scarabs
+* Delirium Orbs
+* Beasts
+* Divination Cards
 
 ## Data Sources
 
-Primary source:
+### Primary Source
 
-- PoEDB TW Economy
+* PoEDB TW Economy
 
-Fallback source:
+### Fallback Source
 
-- poe.ninja, used only when PoEDB is unavailable, parsing fails, or a category is missing.
+* poe.ninja
 
-Important notes:
+poe.ninja is only used when:
 
-- Taiwan server and global server prices can differ significantly.
-- Prices are references only and are not guaranteed trade prices.
-- Heat values are market activity estimates and must not be treated as official transaction volume.
-- `volume`, `count`, and `listingCount` in source data are displayed as heat or estimated heat in the UI.
+* PoEDB is unavailable
+* Parsing fails
+* A category is missing from PoEDB
 
-## Unofficial Disclaimer
+### Notes
 
-POE Market Watch is not an official Grinding Gear Games tool and is not affiliated with Grinding Gear Games.
+* Taiwan Realm prices may differ significantly from Global Realm prices.
+* Prices are provided for reference only.
+* Market activity is displayed as **Popularity** or **Estimated Popularity**.
+* Popularity does not represent official trade volume.
 
-Path of Exile, GGG, PoEDB, poe.ninja, related names, icons, and data belong to their respective rights holders.
+## Architecture
 
-Do not put `POESESSID`, account cookies, tokens, or API keys in a public repository.
+```text
+PoEDB TW Economy
+        │
+        ▼
+ Provider Layer
+        │
+        ▼
+ Normalization
+        │
+        ▼
+  MarketItem
+        │
+        ▼
+ Dashboard UI
+```
 
-## Docker Local Development
+### Static Export Data Flow
 
-Create `.env`:
+```text
+Build Step
+     │
+     ▼
+PoEDB / Fallback Providers
+     │
+     ▼
+public/data/*.json
+     │
+     ▼
+Frontend UI
+```
+
+GitHub Pages uses pre-generated static data and does not rely on a server runtime.
+
+## Disclaimer
+
+POE Market Watch is an unofficial community project.
+
+This project is not affiliated with or endorsed by Grinding Gear Games.
+
+Path of Exile, GGG, PoEDB, poe.ninja, and all related trademarks, names, icons, and assets belong to their respective owners.
+
+Do not commit:
+
+* POESESSID
+* Account cookies
+* API keys
+* Personal tokens
+
+to public repositories.
+
+## Local Development (Docker)
+
+Create a local environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Start local development:
+Start development:
 
 ```bash
 docker compose up --build
@@ -79,11 +143,11 @@ Open:
 http://localhost:3000
 ```
 
-The dev container will:
+The development container will:
 
-1. Install dependencies inside Docker.
-2. Generate `public/data/market.json` and `public/data/meta.json`.
-3. Start `next dev` with hot reload.
+1. Install dependencies.
+2. Generate market data.
+3. Start Next.js with hot reload enabled.
 
 Stop:
 
@@ -91,7 +155,7 @@ Stop:
 docker compose down
 ```
 
-Clear Docker volumes:
+Remove volumes:
 
 ```bash
 docker compose down -v
@@ -99,7 +163,7 @@ docker compose down -v
 
 ## Static Production Preview
 
-Build and serve the static export locally:
+Build and run the static export:
 
 ```bash
 docker compose -f docker-compose.prod.yml up --build -d
@@ -111,7 +175,7 @@ Open:
 http://localhost:3000
 ```
 
-This mode serves `out/` with `scripts/serve-static.mjs`. It does not use a Next.js server runtime.
+This mode serves the generated `out/` directory and does not use a Next.js runtime server.
 
 Stop:
 
@@ -127,7 +191,7 @@ Generate market data manually:
 docker compose exec web npm run build:market-data
 ```
 
-Generate market data and static export:
+Generate market data and export the full static site:
 
 ```bash
 docker compose exec web npm run build:pages
@@ -142,13 +206,13 @@ public/data/meta.json
 
 `meta.json` contains:
 
-- `updatedAt`
-- `source`
-- `stale`
-- `errorMessage`
-- `itemCount`
+* updatedAt
+* source
+* stale
+* errorMessage
+* itemCount
 
-If a market data update fails and a previous successful `market.json` exists, the previous snapshot is kept and `meta.json` is marked stale.
+If a market update fails, the last successful dataset is preserved and marked as stale.
 
 ## GitHub Pages Deployment
 
@@ -158,35 +222,15 @@ Workflow:
 .github/workflows/deploy-pages.yml
 ```
 
-The workflow:
+Deployment flow:
 
-1. Installs dependencies with `npm install --no-package-lock`.
-2. Runs `npm run build:market-data`.
-3. Configures `NEXT_PUBLIC_BASE_PATH` for project pages.
-4. Runs `npm run build`.
-5. Uploads `out/` to GitHub Pages.
+1. Install dependencies.
+2. Generate market data.
+3. Configure base path.
+4. Build static pages.
+5. Deploy the generated `out/` directory.
 
-Repository settings:
-
-1. Enable GitHub Pages.
-2. Set Pages source to GitHub Actions.
-3. Ensure Actions permissions allow Pages deployment.
-
-The workflow also runs on a 30-minute schedule.
-
-## Static Export Design
-
-GitHub Pages does not provide a server runtime. Runtime data fetching is therefore avoided in UI routes.
-
-Current data path:
-
-```text
-build step -> PoEDB / fallback providers -> public/data/*.json -> frontend
-```
-
-The UI reads through `lib/marketData.ts`, not directly from provider implementations. This keeps the option open to switch local/server builds back to provider-based fetching later.
-
-Do not make high-volume direct PoEDB requests from the browser. Do not use GitHub Pages as a high-frequency API server.
+The workflow also refreshes market data every 30 minutes.
 
 ## Useful Scripts
 
@@ -198,7 +242,7 @@ npm run update:i18n:beasts
 npm run report:i18n
 ```
 
-Run these through Docker for normal local work:
+When developing locally:
 
 ```bash
 docker compose exec web npm run <script>
@@ -206,25 +250,30 @@ docker compose exec web npm run <script>
 
 ## Known Limitations
 
-- PoEDB does not provide a stable public JSON API for every category, so some data is parsed from HTML.
-- Beast data currently may require poe.ninja fallback.
-- GitHub Pages data can become stale between scheduled builds.
-- Historical price storage is not implemented.
-- No price alert or Discord notification system is implemented yet.
+* PoEDB does not provide stable public APIs for all categories.
+* Some data is collected through HTML parsing.
+* Beast data may require poe.ninja fallback support.
+* GitHub Pages data can become stale between scheduled updates.
+* Historical price storage is not implemented yet.
+* Price alerts and Discord notifications are not implemented yet.
 
 ## Roadmap
 
-- Public screenshots
-- Better static data cache diagnostics
-- Price alerts
-- Discord notifications
-- Historical price charts
-- Stash scanning
-- Private local `POESESSID` integrations
-- External storage for long-term historical data
+* Public screenshots
+* Improved cache diagnostics
+* Price alerts
+* Discord notifications
+* Historical price charts
+* Stash scanning
+* Local POESESSID integration
+* External storage for long-term historical data
 
 ## License
 
-Project code is licensed under MIT. See `LICENSE`.
+This project is licensed under the MIT License.
 
-PoE, PoEDB, poe.ninja, GGG names, icons, and data rights belong to their respective rights holders. If PoEDB wiki content is quoted or reused, follow PoEDB's content license terms.
+See the `LICENSE` file for details.
+
+Path of Exile, GGG, PoEDB, poe.ninja, and related assets belong to their respective owners.
+
+If PoEDB wiki content is referenced or reused, its original licensing terms must be respected.

@@ -1,5 +1,7 @@
 # POE Market Watch
 
+繁體中文 | [English](README.md)
+
 Path of Exile 1 台服 `Mirage` 聯盟（`遠古蜃景`）市場監控 Dashboard。
 
 本專案目前支援兩種使用模式：
@@ -157,7 +159,7 @@ Workflow：
 
 1. 使用 `npm install --no-package-lock` 安裝 dependencies。
 2. 執行 `npm run build:market-data`。
-3. 依 GitHub Pages project page 設定 `NEXT_PUBLIC_BASE_PATH`。
+3. 依 GitHub Pages 網址設定 `NEXT_PUBLIC_BASE_PATH`。
 4. 執行 `npm run build`。
 5. 將 `out/` 上傳到 GitHub Pages。
 

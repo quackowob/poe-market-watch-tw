@@ -3,8 +3,8 @@ name: Deploy GitHub Pages
 on:
   push:
     branches:
-      - master
       - main
+      - master
   workflow_dispatch:
   schedule:
     - cron: "*/30 * * * *"
@@ -35,7 +35,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install dependencies
         run: npm install --no-package-lock
@@ -44,7 +43,7 @@ jobs:
         run: npm run build:market-data
         env:
           LEAGUE: Mirage
-          LEAGUE_ZH: 遠古蜃景
+          LEAGUE_ZH: "\u9060\u53e4\u8703\u666f"
           MIN_VALUE_CHAOS: "10"
           REFRESH_INTERVAL_MINUTES: "30"
           ENABLE_I18N: "true"

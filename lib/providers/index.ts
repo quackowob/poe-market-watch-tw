@@ -6,6 +6,11 @@ import type { MarketDataProvider } from "./provider";
 
 const primaryProvider = new PoedbTwProvider();
 const fallbackProvider = new PoeNinjaProvider();
+const categoryFetchDelayMs = 300;
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function sourceFor(provider: MarketDataProvider, isFallback: boolean): MarketDataSource {
   return {
@@ -39,26 +44,26 @@ export async function fetchMarketDataWithProviders(): Promise<MarketBundle> {
   const fallbackCategories: MarketCategory[] = [];
   const warnings: string[] = [];
 
-  await Promise.all(
-    marketCategories.map(async (category) => {
-      try {
-        const primaryItems = await primaryProvider.fetchCategory(category);
-        if (primaryItems.length > 0) {
-          items.push(...primaryItems);
-          return;
-        }
-        warnings.push(`PoEDB 台服經濟的 ${category} 分類目前沒有可用資料。`);
-      } catch (error) {
-        warnings.push(
-          `PoEDB 台服經濟的 ${category} 分類讀取失敗：${error instanceof Error ? error.message : "未知錯誤"}。`
-        );
+  for (const category of marketCategories) {
+    try {
+      const primaryItems = await primaryProvider.fetchCategory(category);
+      if (primaryItems.length > 0) {
+        items.push(...primaryItems);
+        await wait(categoryFetchDelayMs);
+        continue;
       }
+      warnings.push(`PoEDB 台服經濟的 ${category} 分類目前沒有可用資料。`);
+    } catch (error) {
+      warnings.push(
+        `PoEDB 台服經濟的 ${category} 分類讀取失敗：${error instanceof Error ? error.message : "未知錯誤"}。`
+      );
+    }
 
-      const fallbackItems = await fallbackProvider.fetchCategory(category);
-      items.push(...fallbackItems);
-      fallbackCategories.push(category);
-    })
-  );
+    const fallbackItems = await fallbackProvider.fetchCategory(category);
+    items.push(...fallbackItems);
+    fallbackCategories.push(category);
+    await wait(categoryFetchDelayMs);
+  }
 
   if (items.length === 0) {
     return {
