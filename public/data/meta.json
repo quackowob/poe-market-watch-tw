@@ -1,12 +1,11 @@
 {
-  "updatedAt": "1970-01-01T00:00:00.000Z",
+  "updatedAt": "2026-06-02T10:19:17.871Z",
   "source": {
-    "provider": "PoEDB",
-    "realm": "TW",
-    "label": "PoEDB TW Economy",
-    "isFallback": false
+    "provider": "PoEDB 台服經濟 + poe.ninja",
+    "realm": "Mixed",
+    "label": "PoEDB 台服經濟（部分分類使用 poe.ninja 備援）",
+    "isFallback": true
   },
-  "stale": true,
-  "errorMessage": "Market data has not been generated yet. Run npm run build:market-data.",
-  "itemCount": 0
+  "stale": false,
+  "itemCount": 401
 }
