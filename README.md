@@ -4,6 +4,8 @@ A market monitoring dashboard for **Path of Exile 1 Taiwan Realm** (`Mirage` Lea
 
 English | [繁體中文](README.zh-TW.md)
 
+Live Demo: [https://quackowob.github.io/poe-market-watch-tw/](https://quackowob.github.io/poe-market-watch-tw/)
+
 POE Market Watch is designed for players who primarily farm:
 
 * Strongboxes
@@ -40,13 +42,25 @@ The goal is to quickly identify:
 
 ## Screenshots
 
-Screenshot placeholders:
+### Dashboard
 
-* Dashboard
-* Scarabs
-* Delirium Orbs
-* Beasts
-* Divination Cards
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Scarabs
+
+![Scarabs](docs/screenshots/scarabs.png)
+
+### Delirium Orbs
+
+![Delirium Orbs](docs/screenshots/delirium-orbs.png)
+
+### Beasts
+
+![Beasts](docs/screenshots/beasts.png)
+
+### Divination Cards
+
+![Divination Cards](docs/screenshots/divination-cards.png)
 
 ## Data Sources
 

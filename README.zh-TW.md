@@ -2,6 +2,8 @@
 
 繁體中文 | [English](README.md)
 
+Live Demo：[https://quackowob.github.io/poe-market-watch-tw/](https://quackowob.github.io/poe-market-watch-tw/)
+
 Path of Exile 1 台服 `Mirage` 聯盟（`遠古蜃景`）市場監控 Dashboard。
 
 本專案目前支援兩種使用模式：
@@ -23,13 +25,25 @@ Path of Exile 1 台服 `Mirage` 聯盟（`遠古蜃景`）市場監控 Dashboard
 
 ## 截圖
 
-公開版截圖預留區：
+### Dashboard
 
-- Dashboard
-- 聖甲蟲
-- 譫妄玉
-- 野獸
-- 命運卡
+![Dashboard](docs/screenshots/dashboard.png)
+
+### 聖甲蟲
+
+![聖甲蟲](docs/screenshots/scarabs.png)
+
+### 譫妄玉
+
+![譫妄玉](docs/screenshots/delirium-orbs.png)
+
+### 野獸
+
+![野獸](docs/screenshots/beasts.png)
+
+### 命運卡
+
+![命運卡](docs/screenshots/divination-cards.png)
 
 ## 資料來源
 
