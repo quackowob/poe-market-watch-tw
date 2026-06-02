@@ -1,19 +1,23 @@
 # POE Market Watch
 
-Static market dashboard for Path of Exile 1, focused on the Taiwan server Mirage league.
+Path of Exile 1 market dashboard for the Taiwan server `Mirage` league (`遠古蜃景`).
 
-- League: `Mirage`
-- Traditional Chinese league name: `遠古蜃景`
-- Main workflows: Strongbox, Bestiary, Delirium Orb, Scarab, Currency, Fragment, Omen, Divination Card monitoring
+The project is currently optimized for two workflows:
 
-## Status
-
-The app supports two modes:
-
-- Local Docker development with hot reload.
-- Static GitHub Pages deployment with market data generated at build time.
+- Local Docker-first development with hot reload.
+- Static GitHub Pages deployment with build-time market data generation.
 
 No local Node.js, npm, or pnpm installation is required for Docker development.
+
+## Features
+
+- Dashboard for strongbox-related drops and high-value items.
+- Pages for Scarabs, Delirium Orbs, Beasts, Divination Cards, Currency, and Fragments.
+- Traditional Chinese item display with English names preserved for search.
+- Favorite items and customizable dashboard/navigation order.
+- Static market snapshot served from `public/data/market.json`.
+- Data freshness metadata served from `public/data/meta.json`.
+- Stale-data warning when the snapshot is older than 2 hours.
 
 ## Screenshots
 
@@ -27,10 +31,20 @@ Placeholder for public release screenshots:
 
 ## Data Sources
 
-- Primary source: PoEDB TW Economy
-- Fallback source: poe.ninja, when a category is unavailable or parsing fails
+Primary source:
 
-Prices are references only and are not guaranteed trade prices. Heat values are market activity estimates and must not be treated as official transaction volume.
+- PoEDB TW Economy
+
+Fallback source:
+
+- poe.ninja, used only when PoEDB is unavailable, parsing fails, or a category is missing.
+
+Important notes:
+
+- Taiwan server and global server prices can differ significantly.
+- Prices are references only and are not guaranteed trade prices.
+- Heat values are market activity estimates and must not be treated as official transaction volume.
+- `volume`, `count`, and `listingCount` in source data are displayed as heat or estimated heat in the UI.
 
 ## Unofficial Disclaimer
 
@@ -42,13 +56,13 @@ Do not put `POESESSID`, account cookies, tokens, or API keys in a public reposit
 
 ## Docker Local Development
 
-Create `.env` from the example:
+Create `.env`:
 
 ```bash
 cp .env.example .env
 ```
 
-Start development:
+Start local development:
 
 ```bash
 docker compose up --build
@@ -59,6 +73,12 @@ Open:
 ```text
 http://localhost:3000
 ```
+
+The dev container will:
+
+1. Install dependencies inside Docker.
+2. Generate `public/data/market.json` and `public/data/meta.json`.
+3. Start `next dev` with hot reload.
 
 Stop:
 
@@ -72,11 +92,9 @@ Clear Docker volumes:
 docker compose down -v
 ```
 
-Dependencies are installed inside Docker volumes. `node_modules` is not required on the host project folder.
-
 ## Static Production Preview
 
-Build and serve the static export through Docker:
+Build and serve the static export locally:
 
 ```bash
 docker compose -f docker-compose.prod.yml up --build -d
@@ -88,28 +106,36 @@ Open:
 http://localhost:3000
 ```
 
+This mode serves `out/` with `scripts/serve-static.mjs`. It does not use a Next.js server runtime.
+
 Stop:
 
 ```bash
 docker compose -f docker-compose.prod.yml down
 ```
 
-## Market Data Build
+## Market Data
 
-Generate static market data:
+Generate market data manually:
 
 ```bash
 docker compose exec web npm run build:market-data
 ```
 
-Output files:
+Generate market data and static export:
+
+```bash
+docker compose exec web npm run build:pages
+```
+
+Output:
 
 ```text
 public/data/market.json
 public/data/meta.json
 ```
 
-`meta.json` includes:
+`meta.json` contains:
 
 - `updatedAt`
 - `source`
@@ -117,17 +143,11 @@ public/data/meta.json
 - `errorMessage`
 - `itemCount`
 
-If data fetching fails and a previous successful `market.json` exists, the previous data is kept and `meta.json` is marked stale.
-
-Build the full static export:
-
-```bash
-docker compose exec web npm run build:pages
-```
+If a market data update fails and a previous successful `market.json` exists, the previous snapshot is kept and `meta.json` is marked stale.
 
 ## GitHub Pages Deployment
 
-GitHub Actions workflow:
+Workflow:
 
 ```text
 .github/workflows/deploy-pages.yml
@@ -135,47 +155,68 @@ GitHub Actions workflow:
 
 The workflow:
 
-1. Installs dependencies with `npm ci`.
+1. Installs dependencies with `npm install --no-package-lock`.
 2. Runs `npm run build:market-data`.
-3. Runs `npm run build`.
-4. Uploads `out/` to GitHub Pages.
+3. Configures `NEXT_PUBLIC_BASE_PATH` for project pages.
+4. Runs `npm run build`.
+5. Uploads `out/` to GitHub Pages.
 
-Repository settings required:
+Repository settings:
 
 1. Enable GitHub Pages.
-2. Set source to GitHub Actions.
+2. Set Pages source to GitHub Actions.
 3. Ensure Actions permissions allow Pages deployment.
 
-Scheduled updates run every 30 minutes.
+The workflow also runs on a 30-minute schedule.
 
-## Static Export Notes
+## Static Export Design
 
-GitHub Pages does not provide a server runtime. The frontend reads static data generated during build:
+GitHub Pages does not provide a server runtime. Runtime data fetching is therefore avoided in UI routes.
+
+Current data path:
 
 ```text
-/data/market.json
-/data/meta.json
+build step -> PoEDB / fallback providers -> public/data/*.json -> frontend
 ```
+
+The UI reads through `lib/marketData.ts`, not directly from provider implementations. This keeps the option open to switch local/server builds back to provider-based fetching later.
 
 Do not make high-volume direct PoEDB requests from the browser. Do not use GitHub Pages as a high-frequency API server.
 
+## Useful Scripts
+
+```bash
+npm run build:market-data
+npm run build:pages
+npm run build:i18n
+npm run update:i18n:beasts
+npm run report:i18n
+```
+
+Run these through Docker for normal local work:
+
+```bash
+docker compose exec web npm run <script>
+```
+
 ## Known Limitations
 
-- PoEDB has no stable public API for every category, so some data is parsed from HTML.
-- Some categories may use poe.ninja fallback data.
-- Taiwan server prices and global server fallback prices can differ significantly.
-- Static data may be stale between scheduled builds.
+- PoEDB does not provide a stable public JSON API for every category, so some data is parsed from HTML.
+- Beast data currently may require poe.ninja fallback.
+- GitHub Pages data can become stale between scheduled builds.
 - Historical price storage is not implemented.
+- No price alert or Discord notification system is implemented yet.
 
 ## Roadmap
 
-- Public release screenshots
-- GitHub Pages static data caching polish
-- Discord notifications
+- Public screenshots
+- Better static data cache diagnostics
 - Price alerts
+- Discord notifications
+- Historical price charts
 - Stash scanning
-- POESESSID-supported private local integrations
-- Historical price charts through an external database or GitHub Releases
+- Private local `POESESSID` integrations
+- External storage for long-term historical data
 
 ## License
 
