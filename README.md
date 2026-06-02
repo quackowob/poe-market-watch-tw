@@ -2,6 +2,11 @@
 
 Path of Exile 1 market dashboard for the Taiwan server `Mirage` league (`遠古蜃景`).
 
+Languages:
+
+- English: `README.md`
+- 繁體中文：`README.zh-TW.md`
+
 The project is currently optimized for two workflows:
 
 - Local Docker-first development with hot reload.
