@@ -1,5 +1,5 @@
 import { marketCategories } from "../config";
-import type { MarketBundle, MarketCategory, MarketDataSource, MarketItem } from "../types";
+import type { CategorySourceMap, MarketBundle, MarketCategory, MarketDataSource, MarketItem } from "../types";
 import { PoedbTwProvider } from "./poedb";
 import { PoeNinjaProvider } from "./poeNinja";
 import type { MarketDataProvider } from "./provider";
@@ -41,6 +41,7 @@ async function loadProvider(provider: MarketDataProvider, isFallback: boolean): 
 
 export async function fetchMarketDataWithProviders(): Promise<MarketBundle> {
   const items: MarketItem[] = [];
+  const categorySources: CategorySourceMap = {};
   const fallbackCategories: MarketCategory[] = [];
   const warnings: string[] = [];
 
@@ -49,6 +50,7 @@ export async function fetchMarketDataWithProviders(): Promise<MarketBundle> {
       const primaryItems = await primaryProvider.fetchCategory(category);
       if (primaryItems.length > 0) {
         items.push(...primaryItems);
+        categorySources[category] = sourceFor(primaryProvider, false);
         await wait(categoryFetchDelayMs);
         continue;
       }
@@ -61,6 +63,7 @@ export async function fetchMarketDataWithProviders(): Promise<MarketBundle> {
 
     const fallbackItems = await fallbackProvider.fetchCategory(category);
     items.push(...fallbackItems);
+    categorySources[category] = sourceFor(fallbackProvider, true);
     fallbackCategories.push(category);
     await wait(categoryFetchDelayMs);
   }
@@ -79,7 +82,8 @@ export async function fetchMarketDataWithProviders(): Promise<MarketBundle> {
     return {
       items,
       lastUpdated: new Date().toISOString(),
-      source: sourceFor(primaryProvider, false)
+      source: sourceFor(primaryProvider, false),
+      categorySources
     };
   }
 
@@ -89,6 +93,7 @@ export async function fetchMarketDataWithProviders(): Promise<MarketBundle> {
     items,
     lastUpdated: new Date().toISOString(),
     source: allFallback ? sourceFor(fallbackProvider, true) : mixedSource(),
+    categorySources,
     warnings: [
       ...warnings,
       allFallback

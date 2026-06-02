@@ -10,7 +10,13 @@ export default async function ScarabsPage() {
 
   return (
     <div className="space-y-4">
-      <DataSourceBanner source={source} warnings={warnings} updatedAt={meta.updatedAt} stale={meta.stale} />
+      <DataSourceBanner
+        source={source}
+        categorySources={meta.categorySources}
+        warnings={warnings}
+        updatedAt={meta.updatedAt}
+        stale={meta.stale}
+      />
       <MarketTable
         title="聖甲蟲市場"
         items={scarabs}

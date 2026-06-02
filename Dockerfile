@@ -6,12 +6,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 FROM base AS dev
 
 EXPOSE 3000
-CMD ["sh", "-c", "rm -rf /app/.next/* && npm install --no-package-lock && (npm run build:market-data || true) && npm run dev -- --hostname 0.0.0.0"]
+CMD ["sh", "-c", "rm -rf /app/.next/* && npm ci && (npm run build:market-data || true) && npm run dev -- --hostname 0.0.0.0"]
 
 FROM base AS deps
 
-COPY package.json ./
-RUN npm install
+COPY package.json package-lock.json ./
+RUN npm ci
 
 FROM base AS builder
 

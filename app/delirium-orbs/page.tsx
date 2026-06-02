@@ -8,7 +8,13 @@ export default async function DeliriumOrbsPage() {
 
   return (
     <div className="space-y-4">
-      <DataSourceBanner source={source} warnings={warnings} updatedAt={meta.updatedAt} stale={meta.stale} />
+      <DataSourceBanner
+        source={source}
+        categorySources={meta.categorySources}
+        warnings={warnings}
+        updatedAt={meta.updatedAt}
+        stale={meta.stale}
+      />
       <MarketTable
         title="譫妄玉市場"
         items={deliriumOrbs}

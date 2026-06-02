@@ -58,6 +58,7 @@ async function main() {
     await writeJson(marketMetaPath, {
       updatedAt,
       source,
+      categorySources: bundle.categorySources,
       stale: false,
       itemCount: bundle.items.length
     } satisfies MarketDataMeta);

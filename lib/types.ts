@@ -36,16 +36,20 @@ export type MarketDataSource = {
   isFallback: boolean;
 };
 
+export type CategorySourceMap = Partial<Record<MarketCategory, MarketDataSource>>;
+
 export type MarketBundle = {
   items: MarketItem[];
   lastUpdated: string;
   source: MarketDataSource;
+  categorySources?: CategorySourceMap;
   warnings?: string[];
 };
 
 export type MarketDataMeta = {
   updatedAt: string;
   source: MarketDataSource;
+  categorySources?: CategorySourceMap;
   stale: boolean;
   errorMessage?: string;
   itemCount?: number;

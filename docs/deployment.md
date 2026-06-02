@@ -82,7 +82,7 @@ Required GitHub settings:
 
 Build process:
 
-1. Install dependencies.
+1. Install dependencies with `npm ci` from `package-lock.json`.
 2. Run `npm run build:market-data`.
 3. Configure `NEXT_PUBLIC_BASE_PATH`.
 4. Run `npm run build`.

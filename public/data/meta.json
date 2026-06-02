@@ -1,11 +1,55 @@
 {
-  "updatedAt": "2026-06-02T12:01:07.283Z",
+  "updatedAt": "2026-06-02T12:19:29.415Z",
   "source": {
     "provider": "PoEDB 台服經濟 + poe.ninja",
     "realm": "Mixed",
     "label": "PoEDB 台服經濟（部分分類使用 poe.ninja 備援）",
     "isFallback": true
   },
+  "categorySources": {
+    "Currency": {
+      "provider": "PoEDB 台服經濟",
+      "realm": "TW",
+      "label": "PoEDB 台服經濟",
+      "isFallback": false
+    },
+    "Fragment": {
+      "provider": "PoEDB 台服經濟",
+      "realm": "TW",
+      "label": "PoEDB 台服經濟",
+      "isFallback": false
+    },
+    "Scarab": {
+      "provider": "PoEDB 台服經濟",
+      "realm": "TW",
+      "label": "PoEDB 台服經濟",
+      "isFallback": false
+    },
+    "Beast": {
+      "provider": "poe.ninja",
+      "realm": "Global",
+      "label": "poe.ninja（國際服備援）",
+      "isFallback": true
+    },
+    "DeliriumOrb": {
+      "provider": "PoEDB 台服經濟",
+      "realm": "TW",
+      "label": "PoEDB 台服經濟",
+      "isFallback": false
+    },
+    "Omen": {
+      "provider": "PoEDB 台服經濟",
+      "realm": "TW",
+      "label": "PoEDB 台服經濟",
+      "isFallback": false
+    },
+    "DivinationCard": {
+      "provider": "PoEDB 台服經濟",
+      "realm": "TW",
+      "label": "PoEDB 台服經濟",
+      "isFallback": false
+    }
+  },
   "stale": false,
-  "itemCount": 399
+  "itemCount": 398
 }

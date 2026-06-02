@@ -44,6 +44,7 @@ export async function readStaticMarketData(): Promise<MarketBundle & { meta: Mar
     meta: {
       updatedAt,
       source: meta?.source || fallbackSource,
+      categorySources: meta?.categorySources,
       stale,
       errorMessage: meta?.errorMessage,
       itemCount: meta?.itemCount ?? items.length

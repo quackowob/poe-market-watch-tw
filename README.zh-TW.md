@@ -157,7 +157,7 @@ Workflow：
 
 流程：
 
-1. 使用 `npm install --no-package-lock` 安裝 dependencies。
+1. 依 `package-lock.json` 使用 `npm ci` 安裝 dependencies。
 2. 執行 `npm run build:market-data`。
 3. 依 GitHub Pages 網址設定 `NEXT_PUBLIC_BASE_PATH`。
 4. 執行 `npm run build`。

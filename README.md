@@ -145,7 +145,7 @@ http://localhost:3000
 
 The development container will:
 
-1. Install dependencies.
+1. Install dependencies with `npm ci` from `package-lock.json`.
 2. Generate market data.
 3. Start Next.js with hot reload enabled.
 

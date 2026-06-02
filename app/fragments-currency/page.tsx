@@ -8,7 +8,13 @@ export default async function FragmentsCurrencyPage() {
 
   return (
     <div className="space-y-4">
-      <DataSourceBanner source={source} warnings={warnings} updatedAt={meta.updatedAt} stale={meta.stale} />
+      <DataSourceBanner
+        source={source}
+        categorySources={meta.categorySources}
+        warnings={warnings}
+        updatedAt={meta.updatedAt}
+        stale={meta.stale}
+      />
       <MarketTable
         title="碎片與通貨"
         items={combined}

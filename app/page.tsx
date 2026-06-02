@@ -10,7 +10,13 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <DataSourceBanner source={source} warnings={warnings} updatedAt={meta.updatedAt} stale={meta.stale} />
+      <DataSourceBanner
+        source={source}
+        categorySources={meta.categorySources}
+        warnings={warnings}
+        updatedAt={meta.updatedAt}
+        stale={meta.stale}
+      />
 
       <section className="grid gap-4 md:grid-cols-4">
         <StatCard label="目標聯盟" value={getLeagueZh()} detail={getLeague()} />
